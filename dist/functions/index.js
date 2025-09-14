@@ -13,7 +13,7 @@ app.post('/search', (req, res) => {
     if (!title || typeof title !== 'string') {
         return res.status(400).json({ error: 'Missing or invalid "title" in request body' });
     }
-    const IK_TOKEN = functions.config().indiankanoon?.token;
+    const IK_TOKEN = functions.config().indiankanoon?.token || process.env.IK_TOKEN;
     if (!IK_TOKEN) {
         return res.status(500).json({ error: 'Server missing IK_TOKEN' });
     }
@@ -36,7 +36,7 @@ app.post('/search', (req, res) => {
 app.post('/find', (req, res) => {
     // Extract the search query from the request body
     const searchQuery = req.body.title;
-    const apiToken = functions.config().indiankanoon?.token;
+    const apiToken = functions.config().indiankanoon?.token || process.env.IK_TOKEN;
     if (!searchQuery) {
         return res.status(400).json({ error: 'Search query (title) is required.' });
     }

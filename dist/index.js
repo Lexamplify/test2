@@ -152,7 +152,7 @@ app.post('/find', (req, res) => {
     });
     let resultData = '';
     let errorData = '';
-    // Listen for data from the script's standard output
+    // Listen for data from the script's standard outputsds
     pythonProcess.stdout.on('data', (data) => {
         resultData += data.toString();
     });
