@@ -49,13 +49,22 @@ export class IndianKanoonAPI {
     }
   }
 
-  async search(query: string, pageNum: number = 0, maxPages: number = 1): Promise<IKSearchResponse> {
+  async search(query: string, pageNum: number = 0, maxPages: number = 5): Promise<IKSearchResponse> {
     const encodedQuery = encodeURIComponent(query);
     const endpoint = `/search/?formInput=${encodedQuery}&pagenum=${pageNum}&maxpages=${maxPages}`;
     
+    console.log(`[IK API] Searching for: "${query}"`);
+    console.log(`[IK API] Endpoint: ${endpoint}`);
+    
     try {
       const result = await this.callAPI(endpoint);
-      return JSON.parse(result);
+      console.log(`[IK API] Raw result type:`, typeof result);
+      console.log(`[IK API] Raw result:`, typeof result === 'string' ? result.substring(0, 500) + '...' : result);
+      
+      // Handle both string and object responses
+      const parsed = typeof result === 'string' ? JSON.parse(result) : result;
+      console.log(`[IK API] Parsed result docs count:`, parsed.docs?.length || 0);
+      return parsed;
     } catch (error) {
       console.error('Search failed:', error);
       throw error;
@@ -65,19 +74,71 @@ export class IndianKanoonAPI {
   findClosestMatch(inputTitle: string, titles: string[]): string | null {
     if (titles.length === 0) return null;
     
-    // Simple string similarity using Levenshtein distance
-    let bestMatch = titles[0];
-    let bestScore = this.calculateSimilarity(inputTitle.toLowerCase(), titles[0].toLowerCase());
+    // Use difflib-like matching similar to Python's get_close_matches
+    const matches = this.getCloseMatches(inputTitle, titles, 1, 0.6);
+    return matches.length > 0 ? matches[0] : titles[0];
+  }
+
+  // Implementation similar to Python's difflib.get_close_matches
+  private getCloseMatches(word: string, possibilities: string[], n: number = 3, cutoff: number = 0.6): string[] {
+    if (!word || possibilities.length === 0) return [];
     
-    for (let i = 1; i < titles.length; i++) {
-      const score = this.calculateSimilarity(inputTitle.toLowerCase(), titles[i].toLowerCase());
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = titles[i];
+    const matches: Array<{ word: string; ratio: number }> = [];
+    
+    for (const possibility of possibilities) {
+      const ratio = this.sequenceMatcher(word, possibility);
+      if (ratio >= cutoff) {
+        matches.push({ word: possibility, ratio });
       }
     }
     
-    return bestMatch;
+    // Sort by ratio (descending) and return top n
+    return matches
+      .sort((a, b) => b.ratio - a.ratio)
+      .slice(0, n)
+      .map(match => match.word);
+  }
+
+  // Sequence matcher similar to Python's difflib.SequenceMatcher
+  private sequenceMatcher(a: string, b: string): number {
+    const aLower = a.toLowerCase();
+    const bLower = b.toLowerCase();
+    
+    if (aLower === bLower) return 1.0;
+    if (aLower.length === 0 || bLower.length === 0) return 0.0;
+    
+    const matches = this.countMatches(aLower, bLower);
+    return (2.0 * matches) / (aLower.length + bLower.length);
+  }
+
+  private countMatches(a: string, b: string): number {
+    const aWords = a.split(/\s+/);
+    const bWords = b.split(/\s+/);
+    
+    let matches = 0;
+    const used = new Set<number>();
+    
+    for (const aWord of aWords) {
+      for (let i = 0; i < bWords.length; i++) {
+        if (used.has(i)) continue;
+        
+        if (this.wordsSimilar(aWord, bWords[i])) {
+          matches++;
+          used.add(i);
+          break;
+        }
+      }
+    }
+    
+    return matches;
+  }
+
+  private wordsSimilar(word1: string, word2: string): boolean {
+    if (word1 === word2) return true;
+    if (Math.abs(word1.length - word2.length) > 2) return false;
+    
+    const similarity = this.calculateSimilarity(word1, word2);
+    return similarity > 0.8;
   }
 
   private calculateSimilarity(str1: string, str2: string): number {
@@ -120,7 +181,8 @@ export class IndianKanoonAPI {
 
   async searchWithBestMatch(query: string): Promise<IKSearchResult> {
     try {
-      const searchResults = await this.search(query, 0, 1);
+      // Match Python: ik.search(title, 0, 5)
+      const searchResults = await this.search(query, 0, 5);
       
       if (!searchResults.docs || searchResults.docs.length === 0) {
         return {
@@ -130,10 +192,14 @@ export class IndianKanoonAPI {
         };
       }
 
+      // Match Python: top_docs = results['docs'][:5]
       const topDocs = searchResults.docs.slice(0, 5);
       const titles = topDocs.map(doc => doc.title);
+      
+      // Match Python: difflib.get_close_matches(title, titles, n=1)
       const bestTitle = this.findClosestMatch(query, titles);
       
+      // Match Python: best_doc = next((doc for doc in top_docs if doc['title'] == best_title[0]), top_docs[0]) if best_title else top_docs[0]
       const bestDoc = bestTitle 
         ? topDocs.find(doc => doc.title === bestTitle) || topDocs[0]
         : topDocs[0];

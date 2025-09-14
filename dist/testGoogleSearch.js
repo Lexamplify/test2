@@ -1,4 +1,6 @@
-import { findIndianKanoonUrlFromGoogle } from './googleSearch.js';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const googleSearch_js_1 = require("./googleSearch.js");
 async function testGoogleSearch() {
     // Check if API key is set
     if (!process.env.SERPAPI_API_KEY) {
@@ -21,7 +23,7 @@ async function testGoogleSearch() {
             console.log('\n' + '='.repeat(80));
             console.log(`Testing query: "${query}"`);
             console.log('='.repeat(80));
-            const result = await findIndianKanoonUrlFromGoogle(query);
+            const result = await (0, googleSearch_js_1.findIndianKanoonUrlFromGoogle)(query);
             if (result) {
                 console.log('✅ Success! Found URL:', result);
             }

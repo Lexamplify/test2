@@ -1,12 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.findIndianKanoonUrlFromGoogle = findIndianKanoonUrlFromGoogle;
 // googleSearch.ts
-import { getJson } from 'serpapi';
+const serpapi_1 = require("serpapi");
 // You'll need to sign up for a free API key at https://serpapi.com/
 // Then set it as an environment variable: SERPAPI_API_KEY=your_api_key_here
 const API_KEY = process.env.SERPAPI_API_KEY || '';
 if (!API_KEY) {
     console.warn('Warning: SERPAPI_API_KEY environment variable is not set. Please set it to use Google search functionality.');
 }
-export async function findIndianKanoonUrlFromGoogle(title) {
+async function findIndianKanoonUrlFromGoogle(title) {
     if (!API_KEY) {
         console.error('SERPAPI_API_KEY is not set. Please set it to use Google search functionality.');
         return null;
@@ -17,7 +20,7 @@ export async function findIndianKanoonUrlFromGoogle(title) {
         const query = `${title} site:indiankanoon.org`;
         console.log('Search query:', query);
         // Make the API request to SerpAPI
-        const results = await getJson({
+        const results = await (0, serpapi_1.getJson)({
             engine: 'google',
             api_key: API_KEY,
             q: query,

@@ -1,5 +1,12 @@
-import axios from 'axios';
-export class IndianKanoonAPI {
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.IndianKanoonAPI = void 0;
+exports.searchIndianKanoon = searchIndianKanoon;
+const axios_1 = __importDefault(require("axios"));
+class IndianKanoonAPI {
     constructor(token) {
         this.baseUrl = 'https://api.indiankanoon.org';
         this.token = token;
@@ -11,7 +18,7 @@ export class IndianKanoonAPI {
             'Accept': 'application/json'
         };
         try {
-            const response = await axios.post(url, {}, { headers });
+            const response = await axios_1.default.post(url, {}, { headers });
             return response.data;
         }
         catch (error) {
@@ -19,12 +26,19 @@ export class IndianKanoonAPI {
             throw new Error(`API call failed: ${error.message}`);
         }
     }
-    async search(query, pageNum = 0, maxPages = 1) {
+    async search(query, pageNum = 0, maxPages = 5) {
         const encodedQuery = encodeURIComponent(query);
         const endpoint = `/search/?formInput=${encodedQuery}&pagenum=${pageNum}&maxpages=${maxPages}`;
+        console.log(`[IK API] Searching for: "${query}"`);
+        console.log(`[IK API] Endpoint: ${endpoint}`);
         try {
             const result = await this.callAPI(endpoint);
-            return JSON.parse(result);
+            console.log(`[IK API] Raw result type:`, typeof result);
+            console.log(`[IK API] Raw result:`, typeof result === 'string' ? result.substring(0, 500) + '...' : result);
+            // Handle both string and object responses
+            const parsed = typeof result === 'string' ? JSON.parse(result) : result;
+            console.log(`[IK API] Parsed result docs count:`, parsed.docs?.length || 0);
+            return parsed;
         }
         catch (error) {
             console.error('Search failed:', error);
@@ -34,17 +48,63 @@ export class IndianKanoonAPI {
     findClosestMatch(inputTitle, titles) {
         if (titles.length === 0)
             return null;
-        // Simple string similarity using Levenshtein distance
-        let bestMatch = titles[0];
-        let bestScore = this.calculateSimilarity(inputTitle.toLowerCase(), titles[0].toLowerCase());
-        for (let i = 1; i < titles.length; i++) {
-            const score = this.calculateSimilarity(inputTitle.toLowerCase(), titles[i].toLowerCase());
-            if (score > bestScore) {
-                bestScore = score;
-                bestMatch = titles[i];
+        // Use difflib-like matching similar to Python's get_close_matches
+        const matches = this.getCloseMatches(inputTitle, titles, 1, 0.6);
+        return matches.length > 0 ? matches[0] : titles[0];
+    }
+    // Implementation similar to Python's difflib.get_close_matches
+    getCloseMatches(word, possibilities, n = 3, cutoff = 0.6) {
+        if (!word || possibilities.length === 0)
+            return [];
+        const matches = [];
+        for (const possibility of possibilities) {
+            const ratio = this.sequenceMatcher(word, possibility);
+            if (ratio >= cutoff) {
+                matches.push({ word: possibility, ratio });
             }
         }
-        return bestMatch;
+        // Sort by ratio (descending) and return top n
+        return matches
+            .sort((a, b) => b.ratio - a.ratio)
+            .slice(0, n)
+            .map(match => match.word);
+    }
+    // Sequence matcher similar to Python's difflib.SequenceMatcher
+    sequenceMatcher(a, b) {
+        const aLower = a.toLowerCase();
+        const bLower = b.toLowerCase();
+        if (aLower === bLower)
+            return 1.0;
+        if (aLower.length === 0 || bLower.length === 0)
+            return 0.0;
+        const matches = this.countMatches(aLower, bLower);
+        return (2.0 * matches) / (aLower.length + bLower.length);
+    }
+    countMatches(a, b) {
+        const aWords = a.split(/\s+/);
+        const bWords = b.split(/\s+/);
+        let matches = 0;
+        const used = new Set();
+        for (const aWord of aWords) {
+            for (let i = 0; i < bWords.length; i++) {
+                if (used.has(i))
+                    continue;
+                if (this.wordsSimilar(aWord, bWords[i])) {
+                    matches++;
+                    used.add(i);
+                    break;
+                }
+            }
+        }
+        return matches;
+    }
+    wordsSimilar(word1, word2) {
+        if (word1 === word2)
+            return true;
+        if (Math.abs(word1.length - word2.length) > 2)
+            return false;
+        const similarity = this.calculateSimilarity(word1, word2);
+        return similarity > 0.8;
     }
     calculateSimilarity(str1, str2) {
         const longer = str1.length > str2.length ? str1 : str2;
@@ -76,7 +136,8 @@ export class IndianKanoonAPI {
     }
     async searchWithBestMatch(query) {
         try {
-            const searchResults = await this.search(query, 0, 1);
+            // Match Python: ik.search(title, 0, 5)
+            const searchResults = await this.search(query, 0, 5);
             if (!searchResults.docs || searchResults.docs.length === 0) {
                 return {
                     input: query,
@@ -84,9 +145,12 @@ export class IndianKanoonAPI {
                     top_results: []
                 };
             }
+            // Match Python: top_docs = results['docs'][:5]
             const topDocs = searchResults.docs.slice(0, 5);
             const titles = topDocs.map(doc => doc.title);
+            // Match Python: difflib.get_close_matches(title, titles, n=1)
             const bestTitle = this.findClosestMatch(query, titles);
+            // Match Python: best_doc = next((doc for doc in top_docs if doc['title'] == best_title[0]), top_docs[0]) if best_title else top_docs[0]
             const bestDoc = bestTitle
                 ? topDocs.find(doc => doc.title === bestTitle) || topDocs[0]
                 : topDocs[0];
@@ -113,7 +177,8 @@ export class IndianKanoonAPI {
         }
     }
 }
-export async function searchIndianKanoon(query, token) {
+exports.IndianKanoonAPI = IndianKanoonAPI;
+async function searchIndianKanoon(query, token) {
     const api = new IndianKanoonAPI(token);
     return await api.searchWithBestMatch(query);
 }

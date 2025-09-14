@@ -35,7 +35,6 @@ app.post('/search', async (req: Request, res: Response) => {
 app.post('/find', async (req: Request, res: Response) => {
   const searchQuery = req.body.title;
   const apiToken = process.env.IK_TOKEN;
-
   if (!searchQuery) {
     return res.status(400).json({ error: 'Search query (title) is required.' });
   }

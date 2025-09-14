@@ -1,13 +1,18 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import { searchIndianKanoon } from './indianKanoonApi';
-dotenv.config();
-const app = express();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const cors_1 = __importDefault(require("cors"));
+const indianKanoonApi_1 = require("./indianKanoonApi");
+dotenv_1.default.config();
+const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3001;
 const IK_TOKEN = process.env.IK_TOKEN;
-app.use(cors());
-app.use(express.json());
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
 app.post('/search', async (req, res) => {
     const { title } = req.body;
     if (!title || typeof title !== 'string') {
@@ -17,7 +22,7 @@ app.post('/search', async (req, res) => {
         return res.status(500).json({ error: 'Server missing IK_TOKEN' });
     }
     try {
-        const searchResult = await searchIndianKanoon(title, IK_TOKEN);
+        const searchResult = await (0, indianKanoonApi_1.searchIndianKanoon)(title, IK_TOKEN);
         return res.json(searchResult);
     }
     catch (error) {
@@ -40,7 +45,7 @@ app.post('/find', async (req, res) => {
     console.log(`[Server] Received search query: "${searchQuery}"`);
     console.log(`[Server] Using token: ${apiToken ? '****' + apiToken.slice(-4) : 'Not set'}`);
     try {
-        const searchResult = await searchIndianKanoon(searchQuery, apiToken);
+        const searchResult = await (0, indianKanoonApi_1.searchIndianKanoon)(searchQuery, apiToken);
         console.log('[Server] Successfully completed search.');
         res.status(200).json(searchResult);
     }
@@ -57,7 +62,7 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 // For Vercel, export the app as default
-export default app;
+exports.default = app;
 // For local development
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {

@@ -1,9 +1,15 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.findCaseUrlWithLLM = findCaseUrlWithLLM;
 // llmSearch.ts
-import { OpenAI } from 'openai';
-import dotenv from 'dotenv';
-dotenv.config();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-export async function findCaseUrlWithLLM(title) {
+const openai_1 = require("openai");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const openai = new openai_1.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+async function findCaseUrlWithLLM(title) {
     try {
         const prompt = `
 You are a legal AI assistant. Your task is to find the **exact Indian Kanoon URL** for a given case title.

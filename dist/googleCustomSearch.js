@@ -1,12 +1,18 @@
-import axios from 'axios';
-import dotenv from 'dotenv';
-dotenv.config();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.searchIndianKanoonWithCSE = searchIndianKanoonWithCSE;
+const axios_1 = __importDefault(require("axios"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const API_KEY = process.env.GOOGLE_API_KEY;
 const SEARCH_ENGINE_ID = process.env.SEARCH_ENGINE_ID;
-export async function searchIndianKanoonWithCSE(query) {
+async function searchIndianKanoonWithCSE(query) {
     const url = `https://www.googleapis.com/customsearch/v1`;
     try {
-        const res = await axios.get(url, {
+        const res = await axios_1.default.get(url, {
             params: {
                 key: API_KEY,
                 cx: SEARCH_ENGINE_ID,
