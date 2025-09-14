@@ -22,7 +22,7 @@
     "firebase-functions": "^6.0.1",
     "google-it": "^1.6.4",
     "http-proxy-middleware": "^3.0.5",
-    "openai": "^4.67.3",
+    "@google/generative-ai": "^0.21.0",
     "serpapi": "^2.2.1"
   },
   "devDependencies": {

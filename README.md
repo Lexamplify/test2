@@ -48,7 +48,7 @@ A comprehensive Node.js/TypeScript API service that provides multiple methods to
    ```env
    # Required API Keys
    IK_TOKEN=your_indian_kanoon_api_token
-   OPENAI_API_KEY=your_openai_api_key
+   GEMINI_API_KEY=your_gemini_api_key
    SERPAPI_API_KEY=your_serpapi_key
    GOOGLE_API_KEY=your_google_custom_search_api_key
    SEARCH_ENGINE_ID=your_google_custom_search_engine_id
@@ -297,7 +297,7 @@ Alternative search endpoint with enhanced error handling and logging.
      --platform managed \
      --region us-central1 \
      --allow-unauthenticated \
-     --set-env-vars="IK_TOKEN=your_token,OPENAI_API_KEY=your_key,SERPAPI_API_KEY=your_key,GOOGLE_API_KEY=your_key,SEARCH_ENGINE_ID=your_id"
+     --set-env-vars="IK_TOKEN=your_token,GEMINI_API_KEY=your_key,SERPAPI_API_KEY=your_key,GOOGLE_API_KEY=your_key,SEARCH_ENGINE_ID=your_id"
    ```
 
 ### Step 4: Alternative Firebase Functions Deployment
@@ -329,7 +329,7 @@ Alternative search endpoint with enhanced error handling and logging.
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `IK_TOKEN` | Indian Kanoon API token | Yes |
-| `OPENAI_API_KEY` | OpenAI API key for LLM search | Yes |
+| `GEMINI_API_KEY` | Google Gemini API key for LLM search | Yes |
 | `SERPAPI_API_KEY` | SerpAPI key for Google search | Yes |
 | `GOOGLE_API_KEY` | Google Custom Search API key | Yes |
 | `SEARCH_ENGINE_ID` | Google Custom Search Engine ID | Yes |
@@ -399,7 +399,7 @@ For support and questions:
 - [Indian Kanoon API Documentation](https://api.indiankanoon.org/)
 - [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
 - [Firebase Functions Documentation](https://firebase.google.com/docs/functions)
-- [OpenAI API Documentation](https://platform.openai.com/docs)
+- [Google Gemini API Documentation](https://ai.google.dev/docs)
 - [SerpAPI Documentation](https://serpapi.com/)
 
 ---

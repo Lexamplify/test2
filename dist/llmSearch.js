@@ -5,12 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findCaseUrlWithLLM = findCaseUrlWithLLM;
 // llmSearch.ts
-const openai_1 = require("openai");
+const generative_ai_1 = require("@google/generative-ai");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const openai = new openai_1.OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 async function findCaseUrlWithLLM(title) {
     try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const prompt = `
 You are a legal AI assistant. Your task is to find the **exact Indian Kanoon URL** for a given case title.
 
@@ -23,16 +24,12 @@ Output Requirements:
 
 Begin output:
 `;
-        const response = await openai.chat.completions.create({
-            model: 'gpt-4',
-            messages: [{ role: 'user', content: prompt }],
-            temperature: 0.2,
-            max_tokens: 100,
-        });
-        const result = response.choices[0].message.content?.trim() || '';
-        if (result.toLowerCase() === 'not found' || !result.startsWith('http'))
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text().trim();
+        if (text.toLowerCase() === 'not found' || !text.startsWith('http'))
             return null;
-        return result;
+        return text;
     }
     catch (error) {
         console.error('[LLM Search] Error:', error);
